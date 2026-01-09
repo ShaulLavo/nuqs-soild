@@ -13,7 +13,7 @@
     "url": "https://github.com/47ng/nuqs"
   },
   "scripts": {
-    "dev": "turbo run dev",
+    "dev:internal": "turbo run dev",
     "build": "turbo run build",
     "test": "turbo run test --log-order=stream",
     "prepare": "husky",
