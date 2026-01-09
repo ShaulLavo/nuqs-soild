@@ -1,4 +1,5 @@
 import { describe, expectTypeOf, it } from 'vitest'
+import type { Accessor } from 'solid-js'
 import {
   debounce,
   defaultRateLimit,
@@ -15,7 +16,7 @@ describe('types/useQueryStates', () => {
   }
   it('has nullable state by default', () => {
     const [state, setState] = useQueryStates(parsers)
-    expectTypeOf(state).toEqualTypeOf<{ a: string | null; b: number | null }>()
+    expectTypeOf(state).toEqualTypeOf<Accessor<{ a: string | null; b: number | null }>>()
     setState({ a: 'foo', b: 42 })
     setState(old => {
       expectTypeOf(old).toEqualTypeOf<{ a: string | null; b: number | null }>()
@@ -51,7 +52,7 @@ describe('types/useQueryStates', () => {
       a: parseAsString.withDefault('foo'),
       b: parseAsInteger.withDefault(42)
     })
-    expectTypeOf(state).toEqualTypeOf<{ a: string; b: number }>()
+    expectTypeOf(state).toEqualTypeOf<Accessor<{ a: string; b: number }>>()
     setState({ a: 'bar', b: 42 })
     setState({ a: null, b: null }) // Still allowed to clear it with null (state retuns to default)
     setState(null)
@@ -75,10 +76,10 @@ describe('types/useQueryStates', () => {
         defaultValue: Uint8Array.from('')
       }
     })
-    expectTypeOf(state).toEqualTypeOf<{
+    expectTypeOf(state).toEqualTypeOf<Accessor<{
       a: number | null
       b: Uint8Array<ArrayBuffer>
-    }>()
+    }>>()
   })
   it('supports urlKeys', () => {
     const [state, setState] = useQueryStates(parsers, {
@@ -88,10 +89,10 @@ describe('types/useQueryStates', () => {
       }
     })
     // State uses the original key names
-    expectTypeOf(state).toEqualTypeOf<{
+    expectTypeOf(state).toEqualTypeOf<Accessor<{
       a: string | null
       b: number | null
-    }>()
+    }>>()
     setState({ a: 'baz', b: 42 })
     useQueryStates(parsers, {
       urlKeys: {

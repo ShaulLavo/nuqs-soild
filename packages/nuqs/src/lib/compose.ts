@@ -1,5 +1,7 @@
+import type { TransitionStartFunction } from '../defs'
+
 export function compose(
-  fns: React.TransitionStartFunction[],
+  fns: TransitionStartFunction[],
   final: () => void
 ): void {
   // Build a nested callback chain iteratively (avoids recursion helper)

@@ -1,4 +1,5 @@
-import { useCallback } from 'react'
+import type { Accessor } from 'solid-js'
+import { createMemo } from 'solid-js'
 import type { Options } from './defs'
 import type { GenericParser } from './parsers'
 import { useQueryStates } from './useQueryStates'
@@ -6,9 +7,11 @@ import { useQueryStates } from './useQueryStates'
 export type UseQueryStateOptions<T> = GenericParser<T> & Options
 
 export type UseQueryStateReturn<Parsed, Default> = [
-  Default extends undefined
-    ? Parsed | null // value can't be null if default is specified
-    : Parsed,
+  Accessor<
+    Default extends undefined
+      ? Parsed | null // value can't be null if default is specified
+      : Parsed
+  >,
   (
     value:
       | null
@@ -24,7 +27,7 @@ export type UseQueryStateReturn<Parsed, Default> = [
 // Note: the order of declaration matters (from the most specific to the least).
 
 /**
- * React state hook synchronized with a URL query string in Next.js
+ * SolidJS state hook synchronized with a URL query string
  *
  * This variant is used when providing a default value. This will make
  * the returned state non-nullable when the query is not present in the URL.
@@ -60,7 +63,7 @@ export function useQueryState<T>(
 >
 
 /**
- * React state hook synchronized with a URL query string in Next.js
+ * SolidJS state hook synchronized with a URL query string
  *
  * If the query is missing in the URL, the state will be `null`.
  *
@@ -68,7 +71,7 @@ export function useQueryState<T>(
  * ```ts
  *   // Blog posts filtering by tag
  *   const [tag, selectTag] = useQueryState('tag')
- *   const filteredPosts = posts.filter(post => tag ? post.tag === tag : true)
+ *   const filteredPosts = posts.filter(post => tag() ? post.tag === tag() : true)
  *   const clearTag = () => selectTag(null)
  * ```
  * @param key The URL query string key to bind to
@@ -95,7 +98,7 @@ export function useQueryState(
 ): UseQueryStateReturn<string, typeof options.defaultValue>
 
 /**
- * React state hook synchronized with a URL query string in Next.js
+ * SolidJS state hook synchronized with a URL query string
  *
  * If the query is missing in the URL, the state will be `null`.
  *
@@ -109,7 +112,7 @@ export function useQueryState(
  *
  *   const setToNow = () => setDate(new Date())
  *   const addOneHour = () => {
- *     setDate(oldDate => new Date(oldDate.valueOf() + 3600_000))
+ *     setDate(oldDate => new Date(oldDate().valueOf() + 3600_000))
  *   }
  * ```
  * @param key The URL query string key to bind to
@@ -121,7 +124,7 @@ export function useQueryState(
 ): UseQueryStateReturn<string, undefined>
 
 /**
- * React state hook synchronized with a URL query string in Next.js
+ * SolidJS state hook synchronized with a URL query string
  *
  * If the query is missing in the URL, the state will be `null`.
  *
@@ -135,7 +138,7 @@ export function useQueryState(
  *
  *   const setToNow = () => setDate(new Date())
  *   const addOneHour = () => {
- *     setDate(oldDate => new Date(oldDate.valueOf() + 3600_000))
+ *     setDate(oldDate => new Date(oldDate().valueOf() + 3600_000))
  *   }
  * ```
  * @param key The URL query string key to bind to
@@ -145,7 +148,7 @@ export function useQueryState(
 ): UseQueryStateReturn<string, undefined>
 
 /**
- * React state hook synchronized with a URL query string in Next.js
+ * SolidJS state hook synchronized with a URL query string
  *
  * If used without a `defaultValue` supplied in the options, and the query is
  * missing in the URL, the state will be `null`.
@@ -162,7 +165,7 @@ export function useQueryState(
  * ```ts
  *   // Blog posts filtering by tag
  *   const [tag, selectTag] = useQueryState('tag')
- *   const filteredPosts = posts.filter(post => tag ? post.tag === tag : true)
+ *   const filteredPosts = posts.filter(post => tag() ? post.tag === tag() : true)
  *   const clearTag = () => selectTag(null)
  *
  *   // With default values
@@ -185,7 +188,7 @@ export function useQueryState(
  *
  *   const setToNow = () => setDate(new Date())
  *   const addOneHour = () => {
- *     setDate(oldDate => new Date(oldDate.valueOf() + 3600_000))
+ *     setDate(oldDate => new Date(oldDate().valueOf() + 3600_000))
  *   }
  * ```
  * @param key The URL query string key to bind to
@@ -198,10 +201,10 @@ export function useQueryState<T = string>(
   } = {}
 ) {
   const { parse, type, serialize, eq, defaultValue, ...hookOptions } = options
-  const [{ [key]: state }, setState] = useQueryStates(
+  const [state, setState] = useQueryStates(
     {
       [key]: {
-        parse: parse ?? ((x: any) => x as unknown as T),
+        parse: parse ?? ((x: unknown) => x as unknown as T),
         type,
         serialize,
         eq,
@@ -210,20 +213,22 @@ export function useQueryState<T = string>(
     },
     hookOptions
   )
-  const update = useCallback(
-    (stateUpdater: React.SetStateAction<T | null>, callOptions: Options = {}) =>
-      setState(
-        old => ({
-          [key]:
-            typeof stateUpdater === 'function'
-              ? // @ts-expect-error somehow stateUpdater is not narrowed correctly
-                // and useQueryStates' key type is not inferred
-                stateUpdater(old[key])
-              : stateUpdater
-        }),
-        callOptions
-      ),
-    [key, setState]
-  )
-  return [state, update]
+  const stateValue = createMemo(() => state()[key])
+
+  const update = (
+    stateUpdater: T | null | ((old: T | null) => T | null),
+    callOptions: Options = {}
+  ) =>
+    setState(
+      old => ({
+        [key]:
+          typeof stateUpdater === 'function'
+            ? // @ts-expect-error somehow stateUpdater is not narrowed correctly
+              // and useQueryStates' key type is not inferred
+              stateUpdater(old[key])
+            : stateUpdater
+      }),
+      callOptions
+    )
+  return [stateValue, update]
 }

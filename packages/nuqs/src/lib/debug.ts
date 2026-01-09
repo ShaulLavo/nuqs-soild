@@ -7,7 +7,7 @@ export function debug(message: string, ...args: any[]): void {
   const msg = sprintf(message, ...args)
   performance.mark(msg)
   try {
-    // Handle React Devtools not being able to console.log('%s', null)
+    // Handle SolidJS Devtools not being able to console.log('%s', null)
     console.log(message, ...args)
   } catch {
     console.log(msg)

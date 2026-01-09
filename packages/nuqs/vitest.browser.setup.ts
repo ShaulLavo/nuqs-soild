@@ -1,5 +1,5 @@
-import { cleanup } from 'vitest-browser-react'
+import { cleanup } from 'vitest-browser-solid'
 import { afterEach } from 'vitest'
 
-// https://testing-library.com/docs/react-testing-library/api/#cleanup
+// https://testing-library.com/docs/solid-testing-library/api/#cleanup
 afterEach(cleanup)

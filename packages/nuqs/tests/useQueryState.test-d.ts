@@ -1,4 +1,5 @@
 import { describe, expectTypeOf, it } from 'vitest'
+import type { Accessor } from 'solid-js'
 import {
   debounce,
   defaultRateLimit,
@@ -11,7 +12,7 @@ import {
 describe('types/useQueryState', () => {
   it('has a nullable string state by default', () => {
     const [state, setState] = useQueryState('foo')
-    expectTypeOf(state).toEqualTypeOf<string | null>()
+    expectTypeOf(state).toEqualTypeOf<Accessor<string | null>>()
     setState('bar')
     setState(old => old?.toUpperCase() ?? null)
     expectTypeOf(setState('bar')).toEqualTypeOf<Promise<URLSearchParams>>()
@@ -24,27 +25,27 @@ describe('types/useQueryState', () => {
       throttleMs: 100,
       clearOnDefault: true
     })
-    expectTypeOf(state).toEqualTypeOf<string | null>()
+    expectTypeOf(state).toEqualTypeOf<Accessor<string | null>>()
     setState('bar')
     setState(old => old?.toUpperCase() ?? null)
     expectTypeOf(setState('bar')).toEqualTypeOf<Promise<URLSearchParams>>()
   })
   it('accepts a default value as second argument, making the state non-nullable', () => {
     const [state] = useQueryState('foo', { defaultValue: 'bar' })
-    expectTypeOf(state).toEqualTypeOf<string>()
+    expectTypeOf(state).toEqualTypeOf<Accessor<string>>()
   })
   it('accepts parsers as a second argument', () => {
     const [nullable] = useQueryState('foo', parseAsString)
     const [nonNullable] = useQueryState('foo', parseAsString.withDefault('bar'))
-    expectTypeOf(nullable).toEqualTypeOf<string | null>()
-    expectTypeOf(nonNullable).toEqualTypeOf<string>()
+    expectTypeOf(nullable).toEqualTypeOf<Accessor<string | null>>()
+    expectTypeOf(nonNullable).toEqualTypeOf<Accessor<string>>()
   })
   it('accepts spreading in the default value', () => {
     const [state] = useQueryState('foo', {
       ...parseAsString,
       defaultValue: 'bar'
     })
-    expectTypeOf(state).toEqualTypeOf<string>()
+    expectTypeOf(state).toEqualTypeOf<Accessor<string>>()
   })
   it('accepts passing in a parse function', () => {
     const [state] = useQueryState('foo', {
@@ -53,7 +54,7 @@ describe('types/useQueryState', () => {
         return 42
       }
     })
-    expectTypeOf(state).toEqualTypeOf<number | null>()
+    expectTypeOf(state).toEqualTypeOf<Accessor<number | null>>()
   })
   it('accepts passing in a serialize function', () => {
     const [state] = useQueryState('foo', {
@@ -63,7 +64,7 @@ describe('types/useQueryState', () => {
         return '42'
       }
     })
-    expectTypeOf(state).toEqualTypeOf<number | null>()
+    expectTypeOf(state).toEqualTypeOf<Accessor<number | null>>()
   })
   it('accepts passing in an equality function', () => {
     const [state] = useQueryState('foo', {
@@ -74,7 +75,7 @@ describe('types/useQueryState', () => {
         return a === b
       }
     })
-    expectTypeOf(state).toEqualTypeOf<number | null>()
+    expectTypeOf(state).toEqualTypeOf<Accessor<number | null>>()
   })
   it('allows setting null to clear the query', () => {
     const [, set] = useQueryState('foo')
@@ -181,7 +182,7 @@ describe('types/useQueryState', () => {
       defaultValue: 'open'
     })
 
-    expectTypeOf(issueType).toEqualTypeOf<'open' | 'closed'>()
+    expectTypeOf(issueType).toEqualTypeOf<Accessor<'open' | 'closed'>>()
 
     useQueryState('issueType', {
       ...parseAsStringLiteral(issueTypes),

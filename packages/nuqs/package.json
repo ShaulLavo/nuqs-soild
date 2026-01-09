@@ -1,17 +1,22 @@
 {
-  "name": "nuqs",
-  "version": "0.0.0-semantically-released",
-  "description": "Type-safe search params state manager for React - Like useState, but stored in the URL query string",
+  "name": "nuqs-solid",
+  "version": "0.0.1",
+  "description": "Type-safe search params state manager for SolidJS - Like createSignal, but stored in the URL query string",
   "license": "MIT",
   "author": {
     "name": "François Best",
     "email": "contact@francoisbest.com",
     "url": "https://francoisbest.com"
   },
+  "contributors": [
+    {
+      "name": "Shaul Lavo"
+    }
+  ],
   "funding": "https://github.com/sponsors/franky47",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/47ng/nuqs.git",
+    "url": "git+https://github.com/ShaulLavo/nuqs-solid.git",
     "directory": "packages/nuqs"
   },
   "homepage": "https://nuqs.dev",
@@ -21,14 +26,11 @@
     "querystring",
     "query string",
     "search params",
-    "next-usequerystate",
     "useQueryState",
     "useQueryStates",
-    "nextjs",
-    "react",
-    "remix",
-    "react-router",
-    "tanstack-router"
+    "solidjs",
+    "solid-js",
+    "solid-router"
   ],
   "publishConfig": {
     "access": "public",
@@ -38,15 +40,8 @@
     "dist/",
     "server.d.ts",
     "testing.d.ts",
-    "adapters/react.d.ts",
-    "adapters/next.d.ts",
-    "adapters/next/app.d.ts",
-    "adapters/next/pages.d.ts",
-    "adapters/remix.d.ts",
-    "adapters/react-router.d.ts",
-    "adapters/react-router/v6.d.ts",
-    "adapters/react-router/v7.d.ts",
-    "adapters/tanstack-router.d.ts",
+    "adapters/solid.d.ts",
+    "adapters/solid-router.d.ts",
     "adapters/custom.d.ts",
     "adapters/testing.d.ts"
   ],
@@ -71,50 +66,15 @@
       "import": "./dist/testing.js",
       "default": "./dist/testing.js"
     },
-    "./adapters/react": {
-      "types": "./dist/adapters/react.d.ts",
-      "import": "./dist/adapters/react.js",
-      "default": "./dist/adapters/react.js"
+    "./adapters/solid": {
+      "types": "./dist/adapters/solid.d.ts",
+      "import": "./dist/adapters/solid.js",
+      "default": "./dist/adapters/solid.js"
     },
-    "./adapters/next": {
-      "types": "./dist/adapters/next.d.ts",
-      "import": "./dist/adapters/next.js",
-      "default": "./dist/adapters/next.js"
-    },
-    "./adapters/next/app": {
-      "types": "./dist/adapters/next/app.d.ts",
-      "import": "./dist/adapters/next/app.js",
-      "default": "./dist/adapters/next/app.js"
-    },
-    "./adapters/next/pages": {
-      "types": "./dist/adapters/next/pages.d.ts",
-      "import": "./dist/adapters/next/pages.js",
-      "default": "./dist/adapters/next/pages.js"
-    },
-    "./adapters/remix": {
-      "types": "./dist/adapters/remix.d.ts",
-      "import": "./dist/adapters/remix.js",
-      "default": "./dist/adapters/remix.js"
-    },
-    "./adapters/react-router": {
-      "types": "./dist/adapters/react-router.d.ts",
-      "import": "./dist/adapters/react-router.js",
-      "default": "./dist/adapters/react-router.js"
-    },
-    "./adapters/react-router/v6": {
-      "types": "./dist/adapters/react-router/v6.d.ts",
-      "import": "./dist/adapters/react-router/v6.js",
-      "default": "./dist/adapters/react-router/v6.js"
-    },
-    "./adapters/react-router/v7": {
-      "types": "./dist/adapters/react-router/v7.d.ts",
-      "import": "./dist/adapters/react-router/v7.js",
-      "default": "./dist/adapters/react-router/v7.js"
-    },
-    "./adapters/tanstack-router": {
-      "types": "./dist/adapters/tanstack-router.d.ts",
-      "import": "./dist/adapters/tanstack-router.js",
-      "default": "./dist/adapters/tanstack-router.js"
+    "./adapters/solid-router": {
+      "types": "./dist/adapters/solid-router.d.ts",
+      "import": "./dist/adapters/solid-router.js",
+      "default": "./dist/adapters/solid-router.js"
     },
     "./adapters/custom": {
       "types": "./dist/adapters/custom.d.ts",
@@ -131,7 +91,7 @@
     "dev": "tsdown --watch",
     "build": "tsdown",
     "build:size-json": "size-limit --json > size.json",
-    "test": "pnpm run --stream '/^test:/'",
+    "test": "bun run test:unit && bun run test:types",
     "test:unit": "vitest run --project unit",
     "test:browser": "vitest run --project browser --browser.headless",
     "test:types": "vitest run --project types",
@@ -142,52 +102,32 @@
     "@standard-schema/spec": "1.0.0"
   },
   "peerDependencies": {
-    "@remix-run/react": ">=2",
-    "@tanstack/react-router": "^1",
-    "next": ">=14.2.0",
-    "react": ">=18.2.0 || ^19.0.0-0",
-    "react-router": "^5 || ^6 || ^7",
-    "react-router-dom": "^5 || ^6 || ^7"
+    "@solidjs/router": "^0.14.0 || ^0.15.0",
+    "solid-js": "^1.8.0 || ^2.0.0"
   },
   "peerDependenciesMeta": {
-    "@remix-run/react": {
-      "optional": true
-    },
-    "@tanstack/react-router": {
-      "optional": true
-    },
-    "next": {
-      "optional": true
-    },
-    "react-router": {
-      "optional": true
-    },
-    "react-router-dom": {
+    "@solidjs/router": {
       "optional": true
     }
   },
   "devDependencies": {
-    "@remix-run/react": "^2.17.3",
     "@size-limit/preset-small-lib": "^11.2.0",
+    "@solidjs/router": "^0.15.4",
+    "@solidjs/testing-library": "^0.8.10",
     "@types/node": "^24.3.0",
-    "@types/react": "catalog:react19",
-    "@types/react-dom": "catalog:react19",
-    "@vitejs/plugin-react": "^5.0.4",
     "@vitest/browser-playwright": "^4.0.15",
     "@vitest/coverage-v8": "^4.0.15",
     "arktype": "^2.1.20",
     "fast-check": "^4.2.0",
-    "next": "catalog:next",
-    "playwright": "catalog:e2e",
-    "react": "catalog:react19",
-    "react-dom": "catalog:react19",
-    "react-router-dom": "6.30.1",
+    "playwright": "^1.48.0",
     "size-limit": "^11.2.0",
+    "solid-js": "^1.9.10",
     "tsdown": "^0.15.9",
     "typescript": "^5.9.2",
     "valibot": "^1.2.0",
+    "vite-plugin-solid": "^2.11.0",
     "vitest": "^4.0.15",
-    "vitest-browser-react": "2.0.2",
+    "vitest-browser-solid": "^0.1.0",
     "vitest-package-exports": "^0.1.1",
     "zod": "^4.1.5"
   },

@@ -29,10 +29,9 @@ export type LoaderFunction<Parsers extends ParserMap> = {
   /**
    * Load & parse search params from (almost) any input.
    *
-   * While loaders are typically used in the context of a React Router / Remix
-   * loader function, it can also be used in Next.js API routes or
-   * getServerSideProps functions, or even with the app router `searchParams`
-   * page prop (sync or async), if you don't need the cache behaviours.
+   * While loaders are typically used in the context of SolidStart or other
+   * server-side frameworks, it can also be used in API routes or
+   * server-side functions.
    */
   (
     input: LoaderInput,
@@ -41,13 +40,11 @@ export type LoaderFunction<Parsers extends ParserMap> = {
   /**
    * Load & parse search params from (almost) any input.
    *
-   * While loaders are typically used in the context of a React Router / Remix
-   * loader function, it can also be used in Next.js API routes or
-   * getServerSideProps functions, or even with the app router `searchParams`
-   * page prop (sync or async), if you don't need the cache behaviours.
+   * While loaders are typically used in the context of SolidStart or other
+   * server-side frameworks, it can also be used in API routes or
+   * server-side functions.
    *
-   * Note: this async overload makes it easier to use against the `searchParams`
-   * page prop in Next.js 15 app router:
+   * Note: this async overload makes it easier to use against async search params:
    *
    * ```tsx
    * export default async function Page({ searchParams }) {

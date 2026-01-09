@@ -17,18 +17,20 @@
     "build": "turbo run build",
     "test": "turbo run test --log-order=stream",
     "prepare": "husky",
-    "lint": "pnpm run -w --parallel --stream '/^lint:/'",
+    "lint": "bun run --filter '*' lint:prettier && bun run lint:sherif",
     "lint:prettier": "prettier --check ./packages/nuqs/src/**/*.ts",
     "lint:sherif": "sherif"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^20.0.0",
+    "@solidjs/router": "^0.15.4",
     "commitlint": "^20.1.0",
     "husky": "^9.1.7",
     "prettier": "3.6.2",
     "publint": "^0.3.12",
     "semantic-release": "^25.0.1",
     "sherif": "^1.6.1",
+    "solid-js": "^1.9.10",
     "turbo": "^2.5.6",
     "typescript": "^5.9.2"
   },

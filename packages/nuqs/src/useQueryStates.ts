@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  createSignal,
+  createEffect,
+  createUniqueId,
+  createMemo,
+  batch
+} from 'solid-js'
 import {
   useAdapter,
   useAdapterDefaultOptions,
@@ -52,7 +58,7 @@ export type SetValues<T extends UseQueryStatesKeysMap> = (
 ) => Promise<URLSearchParams>
 
 export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
-  Values<T>,
+  () => Values<T>,
   SetValues<T>
 ]
 
@@ -62,7 +68,7 @@ export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
 const defaultUrlKeys = {}
 
 /**
- * Synchronise multiple query string arguments to React state in Next.js
+ * Synchronise multiple query string arguments to SolidJS state
  *
  * @param keys - An object describing the keys to synchronise and how to
  *               serialise and parse them.
@@ -73,7 +79,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   options: Partial<UseQueryStatesOptions<KeyMap>> = {}
 ): UseQueryStatesReturn<KeyMap> {
-  const hookId = useId()
+  const hookId = createUniqueId()
   const defaultOptions = useAdapterDefaultOptions()
   const processUrlSearchParams = useAdapterProcessUrlSearchParams()
 
@@ -90,152 +96,147 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   type V = NullableValues<KeyMap>
   const stateKeys = Object.keys(keyMap).join(',')
-  const resolvedUrlKeys = useMemo(
-    () =>
-      Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, urlKeys[key] ?? key])
-      ),
-    [stateKeys, JSON.stringify(urlKeys)]
+  const resolvedUrlKeys = createMemo(() =>
+    Object.fromEntries(
+      Object.keys(keyMap).map(key => [key, urlKeys[key] ?? key])
+    )
   )
-  const adapter = useAdapter(Object.values(resolvedUrlKeys))
-  const initialSearchParams = adapter.searchParams
-  const queryRef = useRef<Record<string, Query | null>>({})
-  const defaultValues = useMemo(
+  const adapter = useAdapter(Object.values(resolvedUrlKeys()))
+  const initialSearchParams = adapter.searchParams()
+  let queryRef: Record<string, Query | null> = {}
+  const defaultValues = createMemo(
     () =>
       Object.fromEntries(
         Object.keys(keyMap).map(key => [key, keyMap[key]!.defaultValue ?? null])
-      ) as Values<KeyMap>,
-    [
-      Object.values(keyMap)
-        .map(({ defaultValue }) => defaultValue)
-        .join(',')
-    ]
+      ) as Values<KeyMap>
   )
-  const queuedQueries = debounceController.useQueuedQueries(
-    Object.values(resolvedUrlKeys)
+  const queuedQueries = debounceController.useQueuedQueries(() =>
+    Object.values(resolvedUrlKeys())
   )
-  const [internalState, setInternalState] = useState<V>(() => {
-    const source = initialSearchParams ?? new URLSearchParams()
-    return parseMap(keyMap, urlKeys, source, queuedQueries).state
-  })
+  const [internalState, setInternalState] = createSignal<V>(
+    parseMap(keyMap, urlKeys, initialSearchParams, queuedQueries).state
+  )
 
-  const stateRef = useRef(internalState)
+  let stateRef = internalState()
   debug(
     '[nuq+ %s `%s`] render - state: %O, iSP: %s',
     hookId,
     stateKeys,
-    internalState,
+    internalState(),
     initialSearchParams
   )
 
   // Initialise the refs with the initial values
-  if (
-    Object.keys(queryRef.current).join('&') !==
-    Object.values(resolvedUrlKeys).join('&')
-  ) {
-    const { state, hasChanged } = parseMap(
-      keyMap,
-      urlKeys,
-      initialSearchParams,
-      queuedQueries,
-      queryRef.current,
-      stateRef.current
-    )
-    if (hasChanged) {
-      debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
-        state,
+  createEffect(() => {
+    const currentResolvedUrlKeys = resolvedUrlKeys()
+    if (
+      Object.keys(queryRef).join('&') !==
+      Object.values(currentResolvedUrlKeys).join('&')
+    ) {
+      const { state, hasChanged } = parseMap(
+        keyMap,
+        urlKeys,
         initialSearchParams,
         queuedQueries,
-        queryRef: queryRef.current,
-        stateRef: stateRef.current
-      })
-      stateRef.current = state
-      setInternalState(state)
+        queryRef,
+        stateRef
+      )
+      if (hasChanged) {
+        debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
+          state,
+          initialSearchParams,
+          queuedQueries,
+          queryRef,
+          stateRef
+        })
+        stateRef = state
+        batch(() => setInternalState(() => state))
+      }
+      queryRef = Object.fromEntries(
+        Object.entries(currentResolvedUrlKeys).map(([key, urlKey]) => {
+          const parser = keyMap[key]
+          return [
+            urlKey,
+            parser?.type === 'multi'
+              ? initialSearchParams?.getAll(urlKey)
+              : (initialSearchParams?.get(urlKey) ?? null)
+          ]
+        })
+      )
     }
-    queryRef.current = Object.fromEntries(
-      Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
-        const parser = keyMap[key]
-        return [
-          urlKey,
-          parser?.type === 'multi'
-            ? initialSearchParams?.getAll(urlKey)
-            : (initialSearchParams?.get(urlKey) ?? null)
-        ]
-      })
-    )
-  }
+  })
 
-  useEffect(() => {
+  createEffect(() => {
+    const currentResolvedUrlKeys = resolvedUrlKeys()
     const { state, hasChanged } = parseMap(
       keyMap,
       urlKeys,
       initialSearchParams,
       queuedQueries,
-      queryRef.current,
-      stateRef.current
+      queryRef,
+      stateRef
     )
     if (hasChanged) {
       debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
         state,
         initialSearchParams,
         queuedQueries,
-        queryRef: queryRef.current,
-        stateRef: stateRef.current
+        queryRef,
+        stateRef
       })
-      stateRef.current = state
-      setInternalState(state)
+      stateRef = state
+      batch(() => setInternalState(() => state))
     }
-  }, [
-    Object.values(resolvedUrlKeys)
-      .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
-      .join('&'),
-    JSON.stringify(queuedQueries)
-  ])
+  })
 
   // Sync all hooks together & with external URL changes
-  useEffect(() => {
+  createEffect(() => {
+    const currentResolvedUrlKeys = resolvedUrlKeys()
     const handlers = Object.keys(keyMap).reduce(
       (handlers, stateKey) => {
         handlers[stateKey as keyof KeyMap] = ({
           state,
           query
         }: CrossHookSyncPayload) => {
-          setInternalState(currentState => {
-            const { defaultValue } = keyMap[stateKey]!
-            const urlKey = resolvedUrlKeys[stateKey]!
-            const nextValue = state ?? defaultValue ?? null
-            const currentValue = currentState[stateKey] ?? defaultValue ?? null
+          batch(() => {
+            setInternalState(currentState => {
+              const { defaultValue } = keyMap[stateKey]!
+              const urlKey = currentResolvedUrlKeys[stateKey]!
+              const nextValue = state ?? defaultValue ?? null
+              const currentValue =
+                currentState[stateKey] ?? defaultValue ?? null
 
-            if (Object.is(currentValue, nextValue)) {
+              if (Object.is(currentValue, nextValue)) {
+                debug(
+                  '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). no change, skipping, resolved: %O',
+                  hookId,
+                  stateKeys,
+                  urlKey,
+                  state,
+                  defaultValue,
+                  stateRef
+                )
+                // bail out by returning the current state
+                return currentState
+              }
+              // Note: cannot mutate in-place, the object ref must change
+              // for the subsequent setState to pick it up.
+              stateRef = {
+                ...stateRef,
+                [stateKey as keyof KeyMap]: nextValue
+              }
+              queryRef[urlKey] = query
               debug(
-                '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). no change, skipping, resolved: %O',
+                '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). updateInternalState, resolved: %O',
                 hookId,
                 stateKeys,
                 urlKey,
                 state,
                 defaultValue,
-                stateRef.current
+                stateRef
               )
-              // bail out by returning the current state
-              return currentState
-            }
-            // Note: cannot mutate in-place, the object ref must change
-            // for the subsequent setState to pick it up.
-            stateRef.current = {
-              ...stateRef.current,
-              [stateKey as keyof KeyMap]: nextValue
-            }
-            queryRef.current[urlKey] = query
-            debug(
-              '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). updateInternalState, resolved: %O',
-              hookId,
-              stateKeys,
-              urlKey,
-              state,
-              defaultValue,
-              stateRef.current
-            )
-            return stateRef.current
+              return stateRef
+            })
           })
         }
         return handlers
@@ -244,7 +245,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     )
 
     for (const stateKey of Object.keys(keyMap)) {
-      const urlKey = resolvedUrlKeys[stateKey]!
+      const urlKey = currentResolvedUrlKeys[stateKey]!
       debug(
         '[nuq+ %s `%s`] Subscribing to sync for `%s`',
         hookId,
@@ -255,7 +256,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
     return () => {
       for (const stateKey of Object.keys(keyMap)) {
-        const urlKey = resolvedUrlKeys[stateKey]!
+        const urlKey = currentResolvedUrlKeys[stateKey]!
         debug(
           '[nuq+ %s `%s`] Unsubscribing to sync for `%s`',
           hookId,
@@ -265,129 +266,109 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         emitter.off(urlKey, handlers[stateKey])
       }
     }
-  }, [stateKeys, resolvedUrlKeys])
+  })
 
-  const update = useCallback<SetValues<KeyMap>>(
-    (stateUpdater, callOptions = {}) => {
-      const nullMap = Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, null])
-      ) as Nullable<KeyMap>
-      const newState: Partial<Nullable<KeyMap>> =
-        typeof stateUpdater === 'function'
-          ? (stateUpdater(
-              applyDefaultValues(stateRef.current, defaultValues)
-            ) ?? nullMap)
-          : (stateUpdater ?? nullMap)
-      debug('[nuq+ %s `%s`] setState: %O', hookId, stateKeys, newState)
-      let returnedPromise: Promise<URLSearchParams> | undefined = undefined
-      let maxDebounceTime = 0
-      let doFlush = false
-      const debounceAborts: Array<
-        (p: Promise<URLSearchParams>) => Promise<URLSearchParams>
-      > = []
-      for (let [stateKey, value] of Object.entries(newState)) {
-        const parser = keyMap[stateKey]
-        const urlKey = resolvedUrlKeys[stateKey]!
-        if (!parser || value === undefined) {
-          continue
-        }
-        if (
-          (callOptions.clearOnDefault ??
-            parser.clearOnDefault ??
-            clearOnDefault) &&
-          value !== null &&
-          parser.defaultValue !== undefined &&
-          (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
-        ) {
-          value = null
-        }
-        const query =
-          value === null ? null : (parser.serialize ?? String)(value)
-        emitter.emit(urlKey, { state: value, query })
-        const update: UpdateQueuePushArgs = {
-          key: urlKey,
-          query,
-          options: {
-            // Call-level options take precedence over individual parser options
-            // which take precedence over global options
-            history: callOptions.history ?? parser.history ?? history,
-            shallow: callOptions.shallow ?? parser.shallow ?? shallow,
-            scroll: callOptions.scroll ?? parser.scroll ?? scroll,
-            startTransition:
-              callOptions.startTransition ??
-              parser.startTransition ??
-              startTransition
-          }
-        }
-        if (
-          callOptions?.limitUrlUpdates?.method === 'debounce' ||
-          limitUrlUpdates?.method === 'debounce' ||
-          parser.limitUrlUpdates?.method === 'debounce'
-        ) {
-          if (update.options.shallow === true) {
-            console.warn(error(422))
-          }
-          const timeMs =
-            callOptions?.limitUrlUpdates?.timeMs ??
-            limitUrlUpdates?.timeMs ??
-            parser.limitUrlUpdates?.timeMs ??
-            defaultRateLimit.timeMs
-          const debouncedPromise = debounceController.push(
-            update,
-            timeMs,
-            adapter,
-            processUrlSearchParams
-          )
-          if (maxDebounceTime < timeMs) {
-            // The largest debounce is likely to be the last URL update,
-            // so we keep that Promise to return it.
-            returnedPromise = debouncedPromise
-            maxDebounceTime = timeMs
-          }
-        } else {
-          const timeMs =
-            callOptions?.limitUrlUpdates?.timeMs ??
-            parser?.limitUrlUpdates?.timeMs ??
-            limitUrlUpdates?.timeMs ??
-            callOptions.throttleMs ??
-            parser.throttleMs ??
-            throttleMs
-          debounceAborts.push(debounceController.abort(urlKey))
-          globalThrottleQueue.push(update, timeMs)
-          doFlush = true
+  const update: SetValues<KeyMap> = (stateUpdater, callOptions = {}) => {
+    const nullMap = Object.fromEntries(
+      Object.keys(keyMap).map(key => [key, null])
+    ) as Nullable<KeyMap>
+    const newState: Partial<Nullable<KeyMap>> =
+      typeof stateUpdater === 'function'
+        ? (stateUpdater(applyDefaultValues(stateRef, defaultValues())) ??
+          nullMap)
+        : (stateUpdater ?? nullMap)
+    debug('[nuq+ %s `%s`] setState: %O', hookId, stateKeys, newState)
+    let returnedPromise: Promise<URLSearchParams> | undefined = undefined
+    let maxDebounceTime = 0
+    let doFlush = false
+    const debounceAborts: Array<
+      (p: Promise<URLSearchParams>) => Promise<URLSearchParams>
+    > = []
+    const currentResolvedUrlKeys = resolvedUrlKeys()
+    for (let [stateKey, value] of Object.entries(newState)) {
+      const parser = keyMap[stateKey]
+      const urlKey = currentResolvedUrlKeys[stateKey]!
+      if (!parser || value === undefined) {
+        continue
+      }
+      if (
+        (callOptions.clearOnDefault ??
+          parser.clearOnDefault ??
+          clearOnDefault) &&
+        value !== null &&
+        parser.defaultValue !== undefined &&
+        (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
+      ) {
+        value = null
+      }
+      const query = value === null ? null : (parser.serialize ?? String)(value)
+      emitter.emit(urlKey, { state: value, query })
+      const update: UpdateQueuePushArgs = {
+        key: urlKey,
+        query,
+        options: {
+          // Call-level options take precedence over individual parser options
+          // which take precedence over global options
+          history: callOptions.history ?? parser.history ?? history,
+          shallow: callOptions.shallow ?? parser.shallow ?? shallow,
+          scroll: callOptions.scroll ?? parser.scroll ?? scroll,
+          startTransition:
+            callOptions.startTransition ??
+            parser.startTransition ??
+            startTransition
         }
       }
-      // We need to flush the throttle queue, but we may have a pending
-      // debounced update that will resolve afterwards.
-      const globalPromise = debounceAborts.reduce(
-        (previous, fn) => fn(previous),
-        doFlush
-          ? globalThrottleQueue.flush(adapter, processUrlSearchParams)
-          : globalThrottleQueue.getPendingPromise(adapter)
-      )
-      return returnedPromise ?? globalPromise
-    },
-    [
-      stateKeys,
-      history,
-      shallow,
-      scroll,
-      throttleMs,
-      limitUrlUpdates?.method,
-      limitUrlUpdates?.timeMs,
-      startTransition,
-      resolvedUrlKeys,
-      adapter.updateUrl,
-      adapter.getSearchParamsSnapshot,
-      adapter.rateLimitFactor,
-      processUrlSearchParams,
-      defaultValues
-    ]
-  )
+      if (
+        callOptions?.limitUrlUpdates?.method === 'debounce' ||
+        limitUrlUpdates?.method === 'debounce' ||
+        parser.limitUrlUpdates?.method === 'debounce'
+      ) {
+        if (update.options.shallow === true) {
+          console.warn(error(422))
+        }
+        const timeMs =
+          callOptions?.limitUrlUpdates?.timeMs ??
+          limitUrlUpdates?.timeMs ??
+          parser.limitUrlUpdates?.timeMs ??
+          defaultRateLimit.timeMs
+        const debouncedPromise = debounceController.push(
+          update,
+          timeMs,
+          adapter,
+          processUrlSearchParams
+        )
+        if (maxDebounceTime < timeMs) {
+          // The largest debounce is likely to be the last URL update,
+          // so we keep that Promise to return it.
+          returnedPromise = debouncedPromise
+          maxDebounceTime = timeMs
+        }
+      } else {
+        const timeMs =
+          callOptions?.limitUrlUpdates?.timeMs ??
+          parser?.limitUrlUpdates?.timeMs ??
+          limitUrlUpdates?.timeMs ??
+          callOptions.throttleMs ??
+          parser.throttleMs ??
+          throttleMs
+        debounceAborts.push(debounceController.abort(urlKey))
+        globalThrottleQueue.push(update, timeMs)
+        doFlush = true
+      }
+    }
+    // We need to flush the throttle queue, but we may have a pending
+    // debounced update that will resolve afterwards.
+    const globalPromise = debounceAborts.reduce(
+      (previous, fn) => fn(previous),
+      doFlush
+        ? globalThrottleQueue.flush(adapter, processUrlSearchParams)
+        : globalThrottleQueue.getPendingPromise(adapter)
+    )
+    return returnedPromise ?? globalPromise
+  }
 
-  const outputState = useMemo(
-    () => applyDefaultValues(internalState, defaultValues),
-    [internalState, defaultValues]
+  const outputState = createMemo(() =>
+    applyDefaultValues(internalState(), defaultValues())
   )
   return [outputState, update]
 }

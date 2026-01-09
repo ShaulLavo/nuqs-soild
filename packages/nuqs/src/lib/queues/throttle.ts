@@ -1,5 +1,5 @@
 import type { AdapterInterface, AdapterOptions } from '../../adapters/lib/defs'
-import type { Options } from '../../defs'
+import type { Options, TransitionStartFunction } from '../../defs'
 import { compose } from '../compose'
 import { debug } from '../debug'
 import { error } from '../errors'
@@ -9,7 +9,7 @@ import { withResolvers, type Resolvers } from '../with-resolvers'
 import { defaultRateLimit } from './rate-limiting'
 
 type UpdateMap = Map<string, Query | null>
-type TransitionSet = Set<React.TransitionStartFunction>
+type TransitionSet = Set<TransitionStartFunction>
 export type UpdateQueueAdapterContext = Pick<
   AdapterInterface,
   | 'updateUrl'

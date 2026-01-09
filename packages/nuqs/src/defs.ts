@@ -1,4 +1,8 @@
-import type { TransitionStartFunction } from 'react'
+/**
+ * SolidJS transition start function signature
+ * Similar to the return value of useTransition()[1]
+ */
+export type TransitionStartFunction = (fn: () => void) => void
 
 export type SearchParams = Record<string, string | string[] | undefined>
 export type HistoryOptions = 'replace' | 'push'
@@ -20,7 +24,7 @@ export type Options = {
   /**
    * Scroll to top after a query state update
    *
-   * Defaults to `false`, unlike the Next.js router page navigation methods.
+   * Defaults to `false`.
    */
   scroll?: boolean
 
@@ -45,7 +49,7 @@ export type Options = {
    * @deprecated use `limitUrlUpdates: { 'method': 'throttle', timeMs: number }`
    * or use the shorthand:
    * ```ts
-   * import { throttle } from 'nuqs'
+   * import { throttle } from 'nuqs-solid'
    *
    * limitUrlUpdates: throttle(100) // time in ms
    * ```
@@ -68,12 +72,10 @@ export type Options = {
   limitUrlUpdates?: LimitUrlUpdates
 
   /**
-   * In RSC frameworks, opt-in to observing Server Component loading states when
-   * doing non-shallow updates by passing a `startTransition` from the
-   * `React.useTransition()` hook.
+   * Opt-in to wrapping URL updates in a Solid transition by passing
+   * a `startTransition` from the `useTransition()` hook.
    *
-   * In other frameworks, navigation events triggered by a query update can also
-   * be wrapped in a transition this way (e.g. `React.startTransition`).
+   * This can be used to defer commit until async processes are complete.
    */
   startTransition?: TransitionStartFunction
 
@@ -98,7 +100,7 @@ export type Nullable<T> = {
  *
  * Usage:
  * ```ts
- * import { type UrlKeys } from 'nuqs' // or 'nuqs/server'
+ * import { type UrlKeys } from 'nuqs-solid' // or 'nuqs-solid/server'
  *
  * export const coordinatesSearchParams = {
  *   latitude: parseAsFloat.withDefault(0),

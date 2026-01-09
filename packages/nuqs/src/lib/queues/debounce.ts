@@ -74,7 +74,9 @@ export class DebounceController {
     this.throttleQueue = throttleQueue
   }
 
-  useQueuedQueries(keys: string[]): Record<string, Query | null | undefined> {
+  useQueuedQueries(
+    keys: () => string[]
+  ): Record<string, Query | null | undefined> {
     return useSyncExternalStores(
       keys,
       (key, callback) => this.queuedQuerySync.on(key, callback),

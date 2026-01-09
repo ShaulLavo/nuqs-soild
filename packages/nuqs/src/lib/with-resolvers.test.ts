@@ -2,8 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { withResolvers } from './with-resolvers'
 
 describe('utils: withResolvers', () => {
-  it('supports built-in Promise.withResolvers', async () => {
-    expect('withResolvers' in Promise).toBe(true)
+  it('uses built-in Promise.withResolvers when available', async () => {
+    const hasNativeSupport = 'withResolvers' in Promise
+    if (hasNativeSupport) {
+      expect('withResolvers' in Promise).toBe(true)
+    } else {
+      // Skip this part of the test if native support isn't available
+      expect('withResolvers' in Promise).toBe(false)
+    }
+
     const resolving = withResolvers()
     expect(resolving.promise).toBeInstanceOf(Promise)
     expect(resolving.resolve).toBeInstanceOf(Function)

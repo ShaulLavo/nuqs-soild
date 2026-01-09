@@ -1,11 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "jsx": "react",
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
     // Type checking
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "alwaysStrict": false, // Don't emit "use strict" to avoid conflicts with "use client"
+    "alwaysStrict": false,
     // Modules
     "module": "ESNext",
     "moduleResolution": "Bundler",

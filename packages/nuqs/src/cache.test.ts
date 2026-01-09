@@ -1,20 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { compareSearchParams, createSearchParamsCache } from './cache'
 import { parseAsInteger, parseAsString } from './parsers'
 
-// provide a simple mock for React cache
-vi.mock('react', () => {
-  return {
-    cache<T, CachedFunction extends () => T>(fn: CachedFunction) {
-      let cache: T | undefined = undefined
-      function cachedFn() {
-        cache ??= fn()
-        return cache
-      }
-      return cachedFn
-    }
-  }
-})
+// Note: Cache functionality is simplified for SolidJS version
+// SSR support will be added with SolidStart integration
 
 describe('cache', () => {
   describe('createSearchParamsCache', () => {

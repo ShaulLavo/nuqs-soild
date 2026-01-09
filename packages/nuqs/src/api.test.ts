@@ -37,36 +37,10 @@ const exports = `
     "renderQueryString": "function",
     "unstable_createAdapterProvider": "function",
   },
-  "./adapters/next": {
+  "./adapters/solid": {
     "NuqsAdapter": "function",
   },
-  "./adapters/next/app": {
-    "NuqsAdapter": "function",
-  },
-  "./adapters/next/pages": {
-    "NuqsAdapter": "function",
-  },
-  "./adapters/react": {
-    "NuqsAdapter": "function",
-    "enableHistorySync": "function",
-  },
-  "./adapters/react-router": {
-    "NuqsAdapter": "function",
-    "useOptimisticSearchParams": "function",
-  },
-  "./adapters/react-router/v6": {
-    "NuqsAdapter": "function",
-    "useOptimisticSearchParams": "function",
-  },
-  "./adapters/react-router/v7": {
-    "NuqsAdapter": "function",
-    "useOptimisticSearchParams": "function",
-  },
-  "./adapters/remix": {
-    "NuqsAdapter": "function",
-    "useOptimisticSearchParams": "function",
-  },
-  "./adapters/tanstack-router": {
+  "./adapters/solid-router": {
     "NuqsAdapter": "function",
   },
   "./adapters/testing": {
