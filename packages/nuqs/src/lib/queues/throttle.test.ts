@@ -94,7 +94,10 @@ describe('throttle: ThrottleQueue option combination logic', () => {
     await queue.flush(mockAdapter)
     expect(startTransitionA).toHaveBeenCalledOnce()
     expect(startTransitionB).toHaveBeenCalledOnce()
-    expect(startTransitionA).toHaveBeenCalledBefore(startTransitionB)
+    // Check that startTransitionA was called before startTransitionB by checking call order
+    expect(startTransitionA.mock.invocationCallOrder[0]).toBeLessThan(
+      startTransitionB.mock.invocationCallOrder[0]
+    )
   })
   it('keeps the maximum value for timeMs', () => {
     const queue = new ThrottledQueue()
