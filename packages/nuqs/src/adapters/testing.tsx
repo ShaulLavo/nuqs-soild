@@ -75,21 +75,25 @@ function renderInitialSearchParams(
   return new URLSearchParams(searchParams).toString()
 }
 
-export const NuqsTestingAdapter: ParentComponent<TestingAdapterProps> = (props) => {
-  const renderedInitialSearchParams = renderInitialSearchParams(props.searchParams)
-  
+export const NuqsTestingAdapter: ParentComponent<
+  TestingAdapterProps
+> = props => {
+  const renderedInitialSearchParams = renderInitialSearchParams(
+    props.searchParams
+  )
+
   // Simulate a central location.search in memory
   // for the getSearchParamsSnapshot to be referentially stable.
   let locationSearchRef = renderedInitialSearchParams
-  
+
   if (props.resetUrlUpdateQueueOnMount ?? true) {
     onMount(() => resetQueues())
   }
-  
+
   const [searchParams, setSearchParams] = createSignal(
     new URLSearchParams(locationSearchRef)
   )
-  
+
   createEffect(() => {
     if (!props.hasMemory) {
       return
@@ -98,7 +102,7 @@ export const NuqsTestingAdapter: ParentComponent<TestingAdapterProps> = (props) 
     setSearchParams(synced)
     locationSearchRef = synced.toString()
   })
-  
+
   const updateUrl: AdapterInterface['updateUrl'] = (search, options) => {
     const queryString = renderQueryString(search)
     const searchParamsObj = new URLSearchParams(search) // make a copy
@@ -112,11 +116,11 @@ export const NuqsTestingAdapter: ParentComponent<TestingAdapterProps> = (props) 
       options
     })
   }
-  
+
   const getSearchParamsSnapshot = () => {
     return new URLSearchParams(locationSearchRef)
   }
-  
+
   const useAdapter = (): AdapterInterface => ({
     searchParams,
     updateUrl,
@@ -124,7 +128,7 @@ export const NuqsTestingAdapter: ParentComponent<TestingAdapterProps> = (props) 
     rateLimitFactor: props.rateLimitFactor ?? 0,
     autoResetQueueOnUpdate: props.autoResetQueueOnUpdate
   })
-  
+
   const value = {
     useAdapter,
     get defaultOptions() {
@@ -134,12 +138,8 @@ export const NuqsTestingAdapter: ParentComponent<TestingAdapterProps> = (props) 
       return props.processUrlSearchParams
     }
   }
-  
-  return (
-    <context.Provider value={value}>
-      {props.children}
-    </context.Provider>
-  )
+
+  return <context.Provider value={value}>{props.children}</context.Provider>
 }
 
 /**
@@ -158,7 +158,9 @@ export const NuqsTestingAdapter: ParentComponent<TestingAdapterProps> = (props) 
 export function withNuqsTestingAdapter(
   props: Omit<TestingAdapterProps, 'children'> = {}
 ) {
-  return function NuqsTestingAdapterWrapper(wrapperProps: { children: JSX.Element }): JSX.Element {
+  return function NuqsTestingAdapterWrapper(wrapperProps: {
+    children: JSX.Element
+  }): JSX.Element {
     return (
       <NuqsTestingAdapter {...props}>
         {wrapperProps.children}

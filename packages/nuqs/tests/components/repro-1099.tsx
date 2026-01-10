@@ -11,7 +11,7 @@ type NullDetectorProps = {
   enabled?: boolean
 } & JSX.HTMLAttributes<HTMLPreElement>
 
-export const NullDetector: Component<NullDetectorProps> = (props) => {
+export const NullDetector: Component<NullDetectorProps> = props => {
   const [hasBeenNullAtSomePoint, setHasBeenNullAtSomePoint] = createSignal(
     props.enabled !== false ? props.state === null : false
   )
@@ -28,7 +28,7 @@ export const NullDetector: Component<NullDetectorProps> = (props) => {
 
 export function useFakeLoadingState(trigger: unknown): () => boolean {
   const [isLoading, setIsLoading] = createSignal(false)
-  
+
   createEffect(() => {
     if (!trigger) {
       return
@@ -39,6 +39,6 @@ export function useFakeLoadingState(trigger: unknown): () => boolean {
     }, 100)
     onCleanup(() => clearTimeout(timeout))
   })
-  
+
   return isLoading
 }

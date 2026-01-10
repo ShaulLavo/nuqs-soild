@@ -1,10 +1,5 @@
-import {
-  createSignal,
-  createEffect,
-  onCleanup,
-  createMemo,
-  type Accessor
-} from 'solid-js'
+import { useSearchParams } from '@solidjs/router'
+import { createSignal, createEffect, createMemo, type Accessor } from 'solid-js'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface } from './lib/defs'
 
@@ -14,8 +9,6 @@ import type { AdapterInterface } from './lib/defs'
 function useSolidRouterAdapter(
   watchKeys: Accessor<string[]>
 ): AdapterInterface {
-  // Lazy import to avoid server-side issues during testing
-  const { useSearchParams } = require('@solidjs/router')
   const [searchParams, setSearchParams] = useSearchParams()
   const [currentSearchParams, setCurrentSearchParams] = createSignal(
     new URLSearchParams()
@@ -38,8 +31,8 @@ function useSolidRouterAdapter(
     setCurrentSearchParams(params)
   })
 
-  const updateUrl = (search: URLSearchParams) => {
-    const newParams: Record<string, string | string[]> = {}
+  const updateUrl: AdapterInterface['updateUrl'] = (search, options) => {
+    const newParams: Record<string, string | string[] | undefined> = {}
 
     // Convert URLSearchParams back to solid-router format
     for (const [key, value] of search.entries()) {
@@ -56,16 +49,15 @@ function useSolidRouterAdapter(
     // Clear keys that are not in the new params but were in the old ones
     Object.keys(searchParams).forEach(key => {
       if (!(key in newParams)) {
-        newParams[key] = undefined as any
+        newParams[key] = undefined
       }
     })
 
     setSearchParams(newParams, {
       resolve: false, // Don't resolve relative to current location
-      scroll: false // Don't scroll to top
+      scroll: options.scroll, // Don't scroll to top unless requested
+      replace: options.history === 'replace'
     })
-
-    return Promise.resolve(search)
   }
 
   const getSearchParamsSnapshot = () => currentSearchParams()

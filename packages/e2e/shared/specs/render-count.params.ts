@@ -7,14 +7,11 @@ import {
 } from 'nuqs/server'
 
 const params = {
-  hook: parseAsStringLiteral([
-    'useQueryState',
-    'useQueryStates'
-  ]).withDefault('useQueryState'),
-  shallow: parseAsBoolean.withDefault(true),
-  history: parseAsStringLiteral(['push', 'replace']).withDefault(
-    'replace'
+  hook: parseAsStringLiteral(['useQueryState', 'useQueryStates']).withDefault(
+    'useQueryState'
   ),
+  shallow: parseAsBoolean.withDefault(true),
+  history: parseAsStringLiteral(['push', 'replace']).withDefault('replace'),
   startTransition: parseAsBoolean.withDefault(false)
 }
 

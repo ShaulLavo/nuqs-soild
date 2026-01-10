@@ -5,10 +5,7 @@ const commonConfig = {
   format: ['esm'],
   dts: true,
   outDir: 'dist',
-  external: [
-    'solid-js',
-    '@solidjs/router'
-  ],
+  external: ['solid-js', '@solidjs/router'],
   treeshake: true,
   tsconfig: 'tsconfig.build.json'
 } satisfies Options

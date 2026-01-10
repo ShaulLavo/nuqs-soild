@@ -26,7 +26,8 @@ const defaultContext: AdapterContext = {
   }
 }
 
-export const context: ReturnType<typeof createContext<AdapterContext>> = createContext<AdapterContext>(defaultContext)
+export const context: ReturnType<typeof createContext<AdapterContext>> =
+  createContext<AdapterContext>(defaultContext)
 
 declare global {
   interface Window {

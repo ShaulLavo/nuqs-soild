@@ -3,9 +3,7 @@ import { defineTest } from '../define-test'
 import { navigateTo } from '../playwright/navigate'
 
 export const testForm = defineTest('Form', ({ path }) => {
-  it('supports native HTML forms to update search params', async ({
-    page
-  }) => {
+  it('supports native HTML forms to update search params', async ({ page }) => {
     await navigateTo(page, path)
     await page.locator('input').fill('pass')
     await page.locator('input').press('Enter')

@@ -14,14 +14,11 @@ export const searchParams = {
 }
 
 export const optionsSearchParams = {
-  hook: parseAsStringLiteral([
-    'useQueryState',
-    'useQueryStates'
-  ]).withDefault('useQueryState'),
+  hook: parseAsStringLiteral(['useQueryState', 'useQueryStates']).withDefault(
+    'useQueryState'
+  ),
   shallow: parseAsBoolean.withDefault(true),
-  history: parseAsStringLiteral(['push', 'replace']).withDefault(
-    'replace'
-  )
+  history: parseAsStringLiteral(['push', 'replace']).withDefault('replace')
 }
 
 export const getUrl = createSerializer(optionsSearchParams, {

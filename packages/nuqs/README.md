@@ -101,7 +101,7 @@ Manage multiple query parameters at once.
 All parsers from the original nuqs are available:
 
 - `parseAsString`
-- `parseAsInteger` 
+- `parseAsInteger`
 - `parseAsFloat`
 - `parseAsBoolean`
 - `parseAsJson`
