@@ -332,3 +332,9 @@ A task is DONE when:
 - Docs consistent with behavior
 - No unresolved TODOs introduced
 - No stray console logs added (except controlled debug supports)
+
+## 🦾 Coding Standards
+
+### 🗣️ Comments & Complexity
+- **Minimalism**: Avoid adding comments unless they are important (explain *why*, not *what*).
+- **Code Clarity**: If code is complex, reduce nesting and move statements/calculations into variables or functions with descriptive names over commenting.
